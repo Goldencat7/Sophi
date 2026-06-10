@@ -175,8 +175,12 @@
     }
 
     .poem-card {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      --accent:    #f472b6;
+      --glow:      rgba(244,114,182,0.18);
+      --border:    rgba(244,114,182,0.28);
+      --card-bg:   rgba(255,255,255,0.05);
+      background: var(--card-bg);
+      border: 1px solid var(--border);
       border-radius: 20px;
       width: 100%;
       min-height: clamp(260px, 55vh, 420px);
@@ -192,6 +196,7 @@
                   0 0 0 1px rgba(255,255,255,0.04) inset;
       position: relative;
       overflow: hidden;
+      transition: border-color 0.5s ease, box-shadow 0.5s ease;
     }
 
     .poem-card::before {
@@ -201,8 +206,9 @@
       left: -60px;
       width: 180px;
       height: 180px;
-      background: radial-gradient(circle, rgba(232,98,154,0.15) 0%, transparent 70%);
+      background: radial-gradient(circle, var(--glow) 0%, transparent 70%);
       pointer-events: none;
+      transition: background 0.5s ease;
     }
 
     .poem-icon {
@@ -212,13 +218,39 @@
     }
 
     .poem-title {
-      color: #e8629a;
+      color: var(--accent);
       font-size: clamp(14px, 3.8vw, 17px);
       font-style: italic;
       letter-spacing: 0.08em;
       margin-bottom: 18px;
       text-transform: uppercase;
       opacity: 0.85;
+      transition: color 0.5s ease;
+    }
+
+    /* ─── LILY BACKGROUND ─── */
+    #lily-container {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .lily {
+      position: absolute;
+      pointer-events: none;
+      width: var(--size);
+      height: var(--size);
+      opacity: var(--op);
+      animation: lilyDrift ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    @keyframes lilyDrift {
+      0%   { transform: translateY(0)     rotate(var(--r)); }
+      50%  { transform: translateY(-14px) rotate(calc(var(--r) + 6deg)); }
+      100% { transform: translateY(0)     rotate(var(--r)); }
     }
 
     .poem-text {
@@ -251,7 +283,7 @@
     }
 
     .nav-btn:active {
-      background: rgba(232, 98, 154, 0.3);
+      background: rgba(244, 114, 182, 0.25);
       transform: scale(0.94);
     }
 
@@ -312,6 +344,7 @@
   <!-- ══════════════════════ CAROUSEL SCREEN ══════════════════════ -->
   <div id="carousel-screen">
     <canvas id="stars-canvas-2"></canvas>
+    <div id="lily-container"></div>
     <div class="carousel-wrapper">
       <div class="poem-card" id="poem-card">
         <div class="poem-icon"  id="poem-icon">🍓</div>
@@ -328,42 +361,60 @@
 
   <script>
     /* ════════════════════════════════════════════════════════════════
+       TEMAS DE COR  (cores favoritas dela, em ordem)
+       theme: 0=rosa  1=preto  2=azul  3=roxo
+    ════════════════════════════════════════════════════════════════ */
+    const THEMES = [
+      { accent: '#f472b6', glow: 'rgba(244,114,182,0.18)', border: 'rgba(244,114,182,0.28)', cardBg: 'rgba(255,255,255,0.05)' }, // rosa
+      { accent: '#e2e8f0', glow: 'rgba(226,232,240,0.10)', border: 'rgba(226,232,240,0.20)', cardBg: 'rgba(0,0,0,0.35)'       }, // preto
+      { accent: '#60a5fa', glow: 'rgba(96,165,250,0.18)',  border: 'rgba(96,165,250,0.28)',  cardBg: 'rgba(255,255,255,0.05)' }, // azul
+      { accent: '#a78bfa', glow: 'rgba(167,139,250,0.18)', border: 'rgba(167,139,250,0.28)', cardBg: 'rgba(255,255,255,0.05)' }, // roxo
+    ];
+
+    /* ════════════════════════════════════════════════════════════════
        POEMAS — adicione ou remova objetos à vontade, sem limite.
-       icon  → emoji que aparece no topo do card
-       title → título em rosa (ex: nome do poema)
-       text  → corpo do poema (\n = quebra de linha)
+       icon   → emoji no topo do card
+       title  → título em destaque
+       text   → corpo do poema (\n = quebra de linha)
+       theme  → índice da cor: 0=rosa 1=preto 2=azul 3=roxo
     ════════════════════════════════════════════════════════════════ */
     const poems = [
       {
-        icon:  '🍓',
-        title: 'Poema 1',
-        text:  'Poema 1\n\n(substitua este texto\npelo seu poema)'
-      },
-      {
-        icon:  '🌙',
-        title: 'Poema 2',
-        text:  'Poema 2\n\n(substitua este texto\npelo seu poema)'
-      },
-      {
-        icon:  '✨',
-        title: 'Poema 3',
-        text:  'Poema 3\n\n(substitua este texto\npelo seu poema)'
-      },
-      {
         icon:  '🌸',
+        title: 'Poema 1',
+        text:  'Poema 1\n\n(substitua este texto\npelo seu poema)',
+        theme: 0  // rosa
+      },
+      {
+        icon:  '🖤',
+        title: 'Poema 2',
+        text:  'Poema 2\n\n(substitua este texto\npelo seu poema)',
+        theme: 1  // preto
+      },
+      {
+        icon:  '💙',
+        title: 'Poema 3',
+        text:  'Poema 3\n\n(substitua este texto\npelo seu poema)',
+        theme: 2  // azul
+      },
+      {
+        icon:  '💜',
         title: 'Poema 4',
-        text:  'Poema 4\n\n(substitua este texto\npelo seu poema)'
+        text:  'Poema 4\n\n(substitua este texto\npelo seu poema)',
+        theme: 3  // roxo
       },
       {
         icon:  '💌',
         title: 'Poema 5',
-        text:  'Poema 5\n\n(substitua este texto\npelo seu poema)'
+        text:  'Poema 5\n\n(substitua este texto\npelo seu poema)',
+        theme: 0  // rosa (repete)
       },
       /* ── Para adicionar mais poemas, copie o bloco abaixo: ──────
       {
         icon:  '🌹',
         title: 'Poema 6',
-        text:  'Escreva seu\npoema aqui'
+        text:  'Escreva seu\npoema aqui',
+        theme: 1
       },
       ─────────────────────────────────────────────────────────── */
     ];
@@ -570,6 +621,14 @@
     let current   = 0;
     let animating = false;
 
+    function applyTheme(poem) {
+      const t = THEMES[poem.theme ?? 0];
+      poemCard.style.setProperty('--accent',  t.accent);
+      poemCard.style.setProperty('--glow',    t.glow);
+      poemCard.style.setProperty('--border',  t.border);
+      poemCard.style.setProperty('--card-bg', t.cardBg);
+    }
+
     function renderPoem(index, direction) {
       const poem = poems[index];
 
@@ -578,6 +637,7 @@
         poemTitle.textContent = poem.title;
         poemText.textContent  = poem.text;
         counter.textContent   = `${index + 1} / ${poems.length}`;
+        applyTheme(poem);
         updateNavBtns(index);
         return;
       }
@@ -601,6 +661,7 @@
         poemTitle.textContent = poem.title;
         poemText.textContent  = poem.text;
         counter.textContent   = `${index + 1} / ${poems.length}`;
+        applyTheme(poem);
         updateNavBtns(index);
 
         poemCard.classList.add(inClass);
@@ -635,6 +696,68 @@
       if (dx < 0 && current < poems.length - 1) { current++; renderPoem(current, 'next'); }
       else if (dx > 0 && current > 0)            { current--; renderPoem(current, 'prev'); }
     }, { passive: true });
+
+    /* ════════════════════════════════════════════════════════════════
+       LÍRIOS NO FUNDO
+    ════════════════════════════════════════════════════════════════ */
+    function lilysvg() {
+      return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(50,50)">
+          <ellipse rx="9" ry="32" fill="#ffadd2" transform="rotate(0)   translate(0,-16)"/>
+          <ellipse rx="9" ry="32" fill="#ff85b3" transform="rotate(60)  translate(0,-16)"/>
+          <ellipse rx="9" ry="32" fill="#ffadd2" transform="rotate(120) translate(0,-16)"/>
+          <ellipse rx="9" ry="32" fill="#ff85b3" transform="rotate(180) translate(0,-16)"/>
+          <ellipse rx="9" ry="32" fill="#ffadd2" transform="rotate(240) translate(0,-16)"/>
+          <ellipse rx="9" ry="32" fill="#ff85b3" transform="rotate(300) translate(0,-16)"/>
+          <circle r="6" fill="#f472b6"/>
+          <line x1="0" y1="-6" x2="0"   y2="-22" stroke="#fbbf24" stroke-width="1.5"/>
+          <circle cy="-24" r="2.5" fill="#fbbf24"/>
+          <line x1="0" y1="-6" x2="13"  y2="-17" stroke="#fbbf24" stroke-width="1.5"/>
+          <circle cx="15"  cy="-19" r="2.5" fill="#fbbf24"/>
+          <line x1="0" y1="-6" x2="-13" y2="-17" stroke="#fbbf24" stroke-width="1.5"/>
+          <circle cx="-15" cy="-19" r="2.5" fill="#fbbf24"/>
+          <line x1="0" y1="-6" x2="20"  y2="-6"  stroke="#fbbf24" stroke-width="1.5"/>
+          <circle cx="22"  cy="-6"  r="2.5" fill="#fbbf24"/>
+          <line x1="0" y1="-6" x2="-20" y2="-6"  stroke="#fbbf24" stroke-width="1.5"/>
+          <circle cx="-22" cy="-6"  r="2.5" fill="#fbbf24"/>
+          <line x1="0" y1="-6" x2="13"  y2="6"   stroke="#fbbf24" stroke-width="1.5"/>
+          <circle cx="15"  cy="7"   r="2.5" fill="#fbbf24"/>
+        </g>
+      </svg>`;
+    }
+
+    function initLilies() {
+      const container = document.getElementById('lily-container');
+      const lilies = [
+        { x: 5,  y: 8,  size: 80,  op: 0.10, r: 15,  dur: 6.5 },
+        { x: 82, y: 5,  size: 60,  op: 0.08, r: -20, dur: 7.2 },
+        { x: 88, y: 72, size: 90,  op: 0.09, r: 35,  dur: 8.1 },
+        { x: 3,  y: 78, size: 70,  op: 0.11, r: -10, dur: 5.8 },
+        { x: 45, y: 3,  size: 50,  op: 0.07, r: 50,  dur: 9.0 },
+        { x: 60, y: 88, size: 65,  op: 0.09, r: -40, dur: 6.8 },
+        { x: 20, y: 45, size: 44,  op: 0.06, r: 25,  dur: 7.5 },
+        { x: 75, y: 38, size: 55,  op: 0.07, r: -55, dur: 8.4 },
+        { x: 30, y: 90, size: 48,  op: 0.08, r: 70,  dur: 6.2 },
+        { x: 92, y: 45, size: 40,  op: 0.06, r: -30, dur: 9.5 },
+        { x: 50, y: 55, size: 36,  op: 0.05, r: 10,  dur: 7.8 },
+        { x: 15, y: 20, size: 42,  op: 0.07, r: -65, dur: 8.7 },
+      ];
+
+      lilies.forEach((l, i) => {
+        const el = document.createElement('div');
+        el.className = 'lily';
+        el.style.cssText = `
+          left:${l.x}%;top:${l.y}%;
+          --size:${l.size}px;--op:${l.op};--r:${l.r}deg;
+          animation-duration:${l.dur}s;
+          animation-delay:${-(i * 0.7)}s;
+        `;
+        el.innerHTML = lilysvg();
+        container.appendChild(el);
+      });
+    }
+
+    initLilies();
   </script>
 </body>
 </html>
