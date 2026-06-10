@@ -588,8 +588,12 @@
       const outClass = direction === 'next' ? 'slide-out-left'  : 'slide-out-right';
       const inClass  = direction === 'next' ? 'slide-in-right'  : 'slide-in-left';
 
+      // Fallback: libera o travamento se animationend não disparar
+      const safety = setTimeout(() => { animating = false; }, 700);
+
       poemCard.classList.add(outClass);
-      poemCard.addEventListener('animationend', function handler() {
+      poemCard.addEventListener('animationend', function handler(e) {
+        if (e.target !== poemCard) return; // ignora eventos de elementos filhos
         poemCard.classList.remove(outClass);
         poemCard.removeEventListener('animationend', handler);
 
@@ -600,9 +604,11 @@
         updateNavBtns(index);
 
         poemCard.classList.add(inClass);
-        poemCard.addEventListener('animationend', function h2() {
+        poemCard.addEventListener('animationend', function h2(e) {
+          if (e.target !== poemCard) return; // ignora eventos de elementos filhos
           poemCard.classList.remove(inClass);
           poemCard.removeEventListener('animationend', h2);
+          clearTimeout(safety);
           animating = false;
         });
       });
