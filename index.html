@@ -36,7 +36,6 @@
       pointer-events: none;
     }
 
-    /* Stars canvas sits behind everything */
     #stars-canvas {
       position: absolute;
       inset: 0;
@@ -44,7 +43,6 @@
       height: 100%;
     }
 
-    /* Strawberry */
     #strawberry {
       position: absolute;
       font-size: clamp(56px, 18vw, 96px);
@@ -61,7 +59,6 @@
       transform: scale(0.85);
     }
 
-    /* "Open poems" button */
     #open-btn {
       position: absolute;
       left: 50%;
@@ -92,7 +89,6 @@
       transform: translate(-50%, -50%) scale(0.95);
     }
 
-    /* Touch counter hint */
     #touch-hint {
       position: absolute;
       bottom: 40px;
@@ -104,6 +100,39 @@
       z-index: 2;
       pointer-events: none;
       transition: opacity 0.4s;
+    }
+
+    /* ─── MUSIC BUTTON ─── */
+    #music-btn {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 100;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, transform 0.15s;
+      touch-action: manipulation;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s, background 0.2s, transform 0.15s;
+    }
+
+    #music-btn.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    #music-btn:active {
+      background: rgba(232, 98, 154, 0.3);
+      transform: scale(0.88);
     }
 
     /* ─── CAROUSEL SCREEN ─── */
@@ -126,7 +155,6 @@
       pointer-events: all;
     }
 
-    /* Stars also on carousel screen */
     #stars-canvas-2 {
       position: absolute;
       inset: 0;
@@ -146,7 +174,6 @@
       gap: 28px;
     }
 
-    /* Card */
     .poem-card {
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.12);
@@ -201,7 +228,6 @@
       white-space: pre-line;
     }
 
-    /* Navigation */
     .nav-row {
       display: flex;
       align-items: center;
@@ -242,39 +268,16 @@
       letter-spacing: 0.05em;
     }
 
-    /* Slide transition */
-    .poem-card.slide-out-left {
-      animation: slideOutLeft 0.3s ease forwards;
-    }
+    .poem-card.slide-out-left  { animation: slideOutLeft  0.3s  ease forwards; }
+    .poem-card.slide-out-right { animation: slideOutRight 0.3s  ease forwards; }
+    .poem-card.slide-in-right  { animation: slideInRight  0.32s ease forwards; }
+    .poem-card.slide-in-left   { animation: slideInLeft   0.32s ease forwards; }
 
-    .poem-card.slide-out-right {
-      animation: slideOutRight 0.3s ease forwards;
-    }
+    @keyframes slideOutLeft  { to   { opacity: 0; transform: translateX(-60px); } }
+    @keyframes slideOutRight { to   { opacity: 0; transform: translateX(60px);  } }
+    @keyframes slideInRight  { from { opacity: 0; transform: translateX(60px);  } to { opacity: 1; transform: translateX(0); } }
+    @keyframes slideInLeft   { from { opacity: 0; transform: translateX(-60px); } to { opacity: 1; transform: translateX(0); } }
 
-    .poem-card.slide-in-right {
-      animation: slideInRight 0.32s ease forwards;
-    }
-
-    .poem-card.slide-in-left {
-      animation: slideInLeft 0.32s ease forwards;
-    }
-
-    @keyframes slideOutLeft {
-      to { opacity: 0; transform: translateX(-60px); }
-    }
-    @keyframes slideOutRight {
-      to { opacity: 0; transform: translateX(60px); }
-    }
-    @keyframes slideInRight {
-      from { opacity: 0; transform: translateX(60px); }
-      to   { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes slideInLeft {
-      from { opacity: 0; transform: translateX(-60px); }
-      to   { opacity: 1; transform: translateX(0); }
-    }
-
-    /* Floating hearts (decoration) */
     .heart {
       position: absolute;
       pointer-events: none;
@@ -293,7 +296,21 @@
 </head>
 <body>
 
-  <!-- ═══════════════════════════════ GAME SCREEN ═══════════════════════════════ -->
+  <!-- ══════════════════════ MUSIC ══════════════════════ -->
+  <!--
+    Cole o link direto para um arquivo MP3 abaixo.
+    Exemplos de onde hospedar gratuitamente:
+      - Google Drive (link direto de download)
+      - Dropbox  (troque ?dl=0 por ?dl=1 no final do link)
+      - GitHub   (faça upload do .mp3 no repositório e use o link raw)
+  -->
+  <audio id="bg-music" loop preload="none">
+    <source src="COLE_O_LINK_DA_MUSICA_AQUI.mp3" type="audio/mpeg" />
+  </audio>
+
+  <button id="music-btn" title="Música">🎵</button>
+
+  <!-- ══════════════════════ GAME SCREEN ══════════════════════ -->
   <div id="game-screen">
     <canvas id="stars-canvas"></canvas>
     <div id="strawberry">🍓</div>
@@ -301,57 +318,90 @@
     <span id="touch-hint">toque no morango</span>
   </div>
 
-  <!-- ═══════════════════════════════ CAROUSEL SCREEN ══════════════════════════ -->
+  <!-- ══════════════════════ CAROUSEL SCREEN ══════════════════════ -->
   <div id="carousel-screen">
     <canvas id="stars-canvas-2"></canvas>
     <div class="carousel-wrapper">
       <div class="poem-card" id="poem-card">
-        <div class="poem-icon" id="poem-icon">🍓</div>
+        <div class="poem-icon"  id="poem-icon">🍓</div>
         <div class="poem-title" id="poem-title">Poema 1</div>
-        <div class="poem-text" id="poem-text">Poema 1</div>
+        <div class="poem-text"  id="poem-text">Poema 1</div>
       </div>
       <div class="nav-row">
         <button class="nav-btn" id="prev-btn">← Anterior</button>
-        <span class="counter" id="counter">1 / 5</span>
+        <span class="counter"   id="counter">1 / 5</span>
         <button class="nav-btn" id="next-btn">Próximo →</button>
       </div>
     </div>
   </div>
 
   <script>
-    /* ═══════════════════════════ POEMS DATA ═══════════════════════════
-       Edit the title, icon, and text of each poem below.
-       Use \n for line breaks inside the text.
-    ═══════════════════════════════════════════════════════════════════ */
+    /* ════════════════════════════════════════════════════════════════
+       POEMAS — adicione ou remova objetos à vontade, sem limite.
+       icon  → emoji que aparece no topo do card
+       title → título em rosa (ex: nome do poema)
+       text  → corpo do poema (\n = quebra de linha)
+    ════════════════════════════════════════════════════════════════ */
     const poems = [
       {
-        icon: '🍓',
+        icon:  '🍓',
         title: 'Poema 1',
-        text: 'Poema 1\n\n(substitua este texto\npelo seu poema)'
+        text:  'Poema 1\n\n(substitua este texto\npelo seu poema)'
       },
       {
-        icon: '🌙',
+        icon:  '🌙',
         title: 'Poema 2',
-        text: 'Poema 2\n\n(substitua este texto\npelo seu poema)'
+        text:  'Poema 2\n\n(substitua este texto\npelo seu poema)'
       },
       {
-        icon: '✨',
+        icon:  '✨',
         title: 'Poema 3',
-        text: 'Poema 3\n\n(substitua este texto\npelo seu poema)'
+        text:  'Poema 3\n\n(substitua este texto\npelo seu poema)'
       },
       {
-        icon: '🌸',
+        icon:  '🌸',
         title: 'Poema 4',
-        text: 'Poema 4\n\n(substitua este texto\npelo seu poema)'
+        text:  'Poema 4\n\n(substitua este texto\npelo seu poema)'
       },
       {
-        icon: '💌',
+        icon:  '💌',
         title: 'Poema 5',
-        text: 'Poema 5\n\n(substitua este texto\npelo seu poema)'
-      }
+        text:  'Poema 5\n\n(substitua este texto\npelo seu poema)'
+      },
+      /* ── Para adicionar mais poemas, copie o bloco abaixo: ──────
+      {
+        icon:  '🌹',
+        title: 'Poema 6',
+        text:  'Escreva seu\npoema aqui'
+      },
+      ─────────────────────────────────────────────────────────── */
     ];
 
-    /* ═══════════════════════════ STARS ═══════════════════════════════ */
+    /* ════════════════════════════════════════════════════════════════
+       MÚSICA DE FUNDO
+    ════════════════════════════════════════════════════════════════ */
+    const music    = document.getElementById('bg-music');
+    const musicBtn = document.getElementById('music-btn');
+    let musicStarted = false;
+    let muted = false;
+
+    function startMusic() {
+      if (musicStarted) return;
+      musicStarted = true;
+      music.volume = 0.5;
+      music.play().catch(() => {});
+      musicBtn.classList.add('visible');
+    }
+
+    musicBtn.addEventListener('click', () => {
+      muted = !muted;
+      music.muted = muted;
+      musicBtn.textContent = muted ? '🔇' : '🎵';
+    });
+
+    /* ════════════════════════════════════════════════════════════════
+       ESTRELAS
+    ════════════════════════════════════════════════════════════════ */
     function initStars(canvas) {
       const ctx = canvas.getContext('2d');
       let stars = [];
@@ -390,13 +440,14 @@
       window.addEventListener('resize', resize);
       resize();
       raf = requestAnimationFrame(draw);
-      return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize); };
     }
 
     initStars(document.getElementById('stars-canvas'));
     initStars(document.getElementById('stars-canvas-2'));
 
-    /* ═══════════════════════════ MINI-GAME ══════════════════════════ */
+    /* ════════════════════════════════════════════════════════════════
+       MINI-GAME
+    ════════════════════════════════════════════════════════════════ */
     const strawberry = document.getElementById('strawberry');
     const openBtn    = document.getElementById('open-btn');
     const touchHint  = document.getElementById('touch-hint');
@@ -404,7 +455,7 @@
 
     const MAX_TOUCHES = 5;
     let touchCount = 0;
-    let isMoving = false;
+    let isMoving   = false;
 
     function getStrawberrySize() {
       return parseFloat(getComputedStyle(strawberry).fontSize) * 1.2;
@@ -416,17 +467,17 @@
       const maxY = window.innerHeight - margin * 2;
       const x = margin + Math.random() * maxX;
       const y = margin + Math.random() * maxY;
-      strawberry.style.left = x + 'px';
-      strawberry.style.top  = y + 'px';
+      strawberry.style.left      = x + 'px';
+      strawberry.style.top       = y + 'px';
       strawberry.style.transform = 'translate(-50%, -50%)';
     }
 
     function spawnHeart(x, y) {
       const el = document.createElement('span');
-      el.className = 'heart';
-      el.textContent = ['💕','💗','💓','✨'][Math.floor(Math.random()*4)];
-      el.style.left = (x - 10) + 'px';
-      el.style.top  = (y - 10) + 'px';
+      el.className   = 'heart';
+      el.textContent = ['💕','💗','💓','✨'][Math.floor(Math.random() * 4)];
+      el.style.left            = (x - 10) + 'px';
+      el.style.top             = (y - 10) + 'px';
       el.style.animationDuration = (0.8 + Math.random() * 0.5) + 's';
       gameScreen.appendChild(el);
       el.addEventListener('animationend', () => el.remove());
@@ -437,6 +488,8 @@
       if (isMoving) return;
       isMoving = true;
 
+      startMusic();
+
       const touch = e.touches ? e.touches[0] : e;
       spawnHeart(touch.clientX, touch.clientY);
 
@@ -446,11 +499,10 @@
         moveStrawberry();
         setTimeout(() => { isMoving = false; }, 120);
       } else {
-        // Final touch — hide strawberry, show button
         strawberry.style.transition = 'opacity 0.3s, transform 0.3s';
-        strawberry.style.opacity = '0';
-        strawberry.style.transform = 'translate(-50%, -50%) scale(0)';
-        touchHint.style.opacity = '0';
+        strawberry.style.opacity    = '0';
+        strawberry.style.transform  = 'translate(-50%, -50%) scale(0)';
+        touchHint.style.opacity     = '0';
         setTimeout(() => {
           strawberry.style.display = 'none';
           openBtn.classList.add('visible');
@@ -462,20 +514,24 @@
     strawberry.addEventListener('touchstart', onStrawberryTouch, { passive: false });
     strawberry.addEventListener('mousedown',  onStrawberryTouch);
 
-    // Centre strawberry on load
     window.addEventListener('load', moveStrawberry);
     moveStrawberry();
 
-    /* ═══════════════════════════ TRANSITION ══════════════════════════ */
+    /* ════════════════════════════════════════════════════════════════
+       TRANSIÇÃO PARA O CARROSSEL
+    ════════════════════════════════════════════════════════════════ */
     const carouselScreen = document.getElementById('carousel-screen');
 
     openBtn.addEventListener('click', () => {
+      startMusic();
       gameScreen.classList.add('hidden');
       carouselScreen.classList.add('visible');
       renderPoem(0, null);
     });
 
-    /* ═══════════════════════════ CAROUSEL ═══════════════════════════ */
+    /* ════════════════════════════════════════════════════════════════
+       CARROSSEL
+    ════════════════════════════════════════════════════════════════ */
     const poemCard  = document.getElementById('poem-card');
     const poemIcon  = document.getElementById('poem-icon');
     const poemTitle = document.getElementById('poem-title');
@@ -484,14 +540,13 @@
     const prevBtn   = document.getElementById('prev-btn');
     const nextBtn   = document.getElementById('next-btn');
 
-    let current = 0;
+    let current   = 0;
     let animating = false;
 
     function renderPoem(index, direction) {
       const poem = poems[index];
 
       if (direction === null) {
-        // First render — no animation
         poemIcon.textContent  = poem.icon;
         poemTitle.textContent = poem.title;
         poemText.textContent  = poem.text;
@@ -503,11 +558,10 @@
       if (animating) return;
       animating = true;
 
-      const outClass = direction === 'next' ? 'slide-out-left' : 'slide-out-right';
-      const inClass  = direction === 'next' ? 'slide-in-right' : 'slide-in-left';
+      const outClass = direction === 'next' ? 'slide-out-left'  : 'slide-out-right';
+      const inClass  = direction === 'next' ? 'slide-in-right'  : 'slide-in-left';
 
       poemCard.classList.add(outClass);
-
       poemCard.addEventListener('animationend', function handler() {
         poemCard.classList.remove(outClass);
         poemCard.removeEventListener('animationend', handler);
@@ -533,35 +587,20 @@
     }
 
     prevBtn.addEventListener('click', () => {
-      if (current > 0) {
-        current--;
-        renderPoem(current, 'prev');
-      }
+      if (current > 0) { current--; renderPoem(current, 'prev'); }
     });
 
     nextBtn.addEventListener('click', () => {
-      if (current < poems.length - 1) {
-        current++;
-        renderPoem(current, 'next');
-      }
+      if (current < poems.length - 1) { current++; renderPoem(current, 'next'); }
     });
 
-    /* Touch/swipe on the card */
     let swipeStartX = 0;
-    poemCard.addEventListener('touchstart', e => {
-      swipeStartX = e.touches[0].clientX;
-    }, { passive: true });
-
+    poemCard.addEventListener('touchstart', e => { swipeStartX = e.touches[0].clientX; }, { passive: true });
     poemCard.addEventListener('touchend', e => {
       const dx = e.changedTouches[0].clientX - swipeStartX;
       if (Math.abs(dx) < 40) return;
-      if (dx < 0 && current < poems.length - 1) {
-        current++;
-        renderPoem(current, 'next');
-      } else if (dx > 0 && current > 0) {
-        current--;
-        renderPoem(current, 'prev');
-      }
+      if (dx < 0 && current < poems.length - 1) { current++; renderPoem(current, 'next'); }
+      else if (dx > 0 && current > 0)            { current--; renderPoem(current, 'prev'); }
     }, { passive: true });
   </script>
 </body>
