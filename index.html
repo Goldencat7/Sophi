@@ -296,17 +296,8 @@
 </head>
 <body>
 
-  <!-- ══════════════════════ MUSIC ══════════════════════ -->
-  <!--
-    Cole o link direto para um arquivo MP3 abaixo.
-    Exemplos de onde hospedar gratuitamente:
-      - Google Drive (link direto de download)
-      - Dropbox  (troque ?dl=0 por ?dl=1 no final do link)
-      - GitHub   (faça upload do .mp3 no repositório e use o link raw)
-  -->
-  <audio id="bg-music" loop preload="none">
-    <source src="COLE_O_LINK_DA_MUSICA_AQUI.mp3" type="audio/mpeg" />
-  </audio>
+  <!-- YouTube IFrame API player (invisível) -->
+  <div id="yt-player" style="position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;"></div>
 
   <button id="music-btn" title="Música">🎵</button>
 
@@ -378,24 +369,60 @@
     ];
 
     /* ════════════════════════════════════════════════════════════════
-       MÚSICA DE FUNDO
+       MÚSICA DE FUNDO — YouTube IFrame API
+       Para trocar a música, substitua o VIDEO_ID abaixo pelo ID do
+       vídeo do YouTube (parte depois de "v=" na URL).
     ════════════════════════════════════════════════════════════════ */
-    const music    = document.getElementById('bg-music');
+    const VIDEO_ID = 'Ou3SkdzJui8';
+
     const musicBtn = document.getElementById('music-btn');
-    let musicStarted = false;
-    let muted = false;
+    let ytPlayer      = null;
+    let musicStarted  = false;
+    let muted         = false;
+    let playerReady   = false;
+
+    // Carrega a API do YouTube de forma assíncrona
+    (function loadYTAPI() {
+      const s = document.createElement('script');
+      s.src = 'https://www.youtube.com/iframe_api';
+      document.head.appendChild(s);
+    })();
+
+    window.onYouTubeIframeAPIReady = function () {
+      ytPlayer = new YT.Player('yt-player', {
+        videoId: VIDEO_ID,
+        playerVars: {
+          autoplay:   0,
+          loop:       1,
+          playlist:   VIDEO_ID,
+          playsinline: 1,
+          controls:   0,
+          disablekb:  1,
+          fs:         0,
+          rel:        0
+        },
+        events: {
+          onReady: () => {
+            playerReady = true;
+            ytPlayer.setVolume(50);
+            // Se o usuário já tocou antes de a API carregar, inicia agora
+            if (musicStarted) ytPlayer.playVideo();
+          }
+        }
+      });
+    };
 
     function startMusic() {
       if (musicStarted) return;
       musicStarted = true;
-      music.volume = 0.5;
-      music.play().catch(() => {});
       musicBtn.classList.add('visible');
+      if (playerReady) ytPlayer.playVideo();
     }
 
     musicBtn.addEventListener('click', () => {
       muted = !muted;
-      music.muted = muted;
+      if (muted) ytPlayer && ytPlayer.mute();
+      else       ytPlayer && ytPlayer.unMute();
       musicBtn.textContent = muted ? '🔇' : '🎵';
     });
 
