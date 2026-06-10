@@ -687,11 +687,11 @@
     }
 
     prevBtn.addEventListener('click', () => {
-      if (current > 0) { current--; renderPoem(current, 'prev'); }
+      if (current > 0 && !animating) { current--; renderPoem(current, 'prev'); }
     });
 
     nextBtn.addEventListener('click', () => {
-      if (current < poems.length - 1) { current++; renderPoem(current, 'next'); }
+      if (current < poems.length - 1 && !animating) { current++; renderPoem(current, 'next'); }
     });
 
     let swipeStartX = 0;
@@ -699,8 +699,8 @@
     poemCard.addEventListener('touchend', e => {
       const dx = e.changedTouches[0].clientX - swipeStartX;
       if (Math.abs(dx) < 40) return;
-      if (dx < 0 && current < poems.length - 1) { current++; renderPoem(current, 'next'); }
-      else if (dx > 0 && current > 0)            { current--; renderPoem(current, 'prev'); }
+      if (dx < 0 && current < poems.length - 1 && !animating) { current++; renderPoem(current, 'next'); }
+      else if (dx > 0 && current > 0 && !animating)            { current--; renderPoem(current, 'prev'); }
     }, { passive: true });
 
     /* ════════════════════════════════════════════════════════════════
