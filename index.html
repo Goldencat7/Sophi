@@ -118,7 +118,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.2s, transform 0.15s;
       touch-action: manipulation;
       opacity: 0;
       pointer-events: none;
@@ -245,6 +244,7 @@
       opacity: var(--op);
       animation: lilyDrift ease-in-out infinite;
       transform-origin: center;
+      translate: -50% -50%; /* centraliza pelo ponto de ancoragem */
     }
 
     @keyframes lilyDrift {
@@ -618,8 +618,9 @@
     const prevBtn   = document.getElementById('prev-btn');
     const nextBtn   = document.getElementById('next-btn');
 
-    let current   = 0;
-    let animating = false;
+    let current    = 0;
+    let animating  = false;
+    let generation = 0; // incremented on each navigation to invalidate stale listeners
 
     function applyTheme(poem) {
       const t = THEMES[poem.theme ?? 0];
@@ -644,16 +645,20 @@
 
       if (animating) return;
       animating = true;
+      const myGen = ++generation; // captura geração atual para invalidar listeners antigos
 
       const outClass = direction === 'next' ? 'slide-out-left'  : 'slide-out-right';
       const inClass  = direction === 'next' ? 'slide-in-right'  : 'slide-in-left';
 
       // Fallback: libera o travamento se animationend não disparar
-      const safety = setTimeout(() => { animating = false; }, 700);
+      const safety = setTimeout(() => {
+        if (generation === myGen) animating = false;
+      }, 700);
 
       poemCard.classList.add(outClass);
       poemCard.addEventListener('animationend', function handler(e) {
-        if (e.target !== poemCard) return; // ignora eventos de elementos filhos
+        if (e.target !== poemCard) return;
+        if (generation !== myGen) { poemCard.removeEventListener('animationend', handler); return; }
         poemCard.classList.remove(outClass);
         poemCard.removeEventListener('animationend', handler);
 
@@ -666,7 +671,8 @@
 
         poemCard.classList.add(inClass);
         poemCard.addEventListener('animationend', function h2(e) {
-          if (e.target !== poemCard) return; // ignora eventos de elementos filhos
+          if (e.target !== poemCard) return;
+          if (generation !== myGen) { poemCard.removeEventListener('animationend', h2); return; }
           poemCard.classList.remove(inClass);
           poemCard.removeEventListener('animationend', h2);
           clearTimeout(safety);
