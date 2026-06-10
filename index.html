@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>💌 Surpresa</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Georgia', serif;
+    }
+
+    /* ─── GAME SCREEN ─── */
+    #game-screen {
+      position: fixed;
+      inset: 0;
+      background: #1a1a2e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transition: opacity 0.6s ease;
+    }
+
+    #game-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Stars canvas sits behind everything */
+    #stars-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Strawberry */
+    #strawberry {
+      position: absolute;
+      font-size: clamp(56px, 18vw, 96px);
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.08s ease;
+      filter: drop-shadow(0 0 12px rgba(255, 80, 100, 0.55));
+      line-height: 1;
+      touch-action: none;
+      z-index: 2;
+    }
+
+    #strawberry:active {
+      transform: scale(0.85);
+    }
+
+    /* "Open poems" button */
+    #open-btn {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      z-index: 2;
+      background: linear-gradient(135deg, #e8629a, #c0395f);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 16px 36px;
+      font-size: clamp(15px, 4.5vw, 20px);
+      font-family: 'Georgia', serif;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      box-shadow: 0 4px 24px rgba(232, 98, 154, 0.55);
+      transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  box-shadow 0.2s ease;
+      white-space: nowrap;
+    }
+
+    #open-btn.visible {
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    #open-btn:active {
+      box-shadow: 0 2px 12px rgba(232, 98, 154, 0.4);
+      transform: translate(-50%, -50%) scale(0.95);
+    }
+
+    /* Touch counter hint */
+    #touch-hint {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.3);
+      font-size: 13px;
+      letter-spacing: 0.05em;
+      z-index: 2;
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+
+    /* ─── CAROUSEL SCREEN ─── */
+    #carousel-screen {
+      position: fixed;
+      inset: 0;
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.7s ease 0.3s;
+    }
+
+    #carousel-screen.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* Stars also on carousel screen */
+    #stars-canvas-2 {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .carousel-wrapper {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 420px;
+      padding: 0 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+    }
+
+    /* Card */
+    .poem-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      width: 100%;
+      min-height: clamp(260px, 55vh, 420px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 28px;
+      text-align: center;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35),
+                  0 0 0 1px rgba(255,255,255,0.04) inset;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .poem-card::before {
+      content: '';
+      position: absolute;
+      top: -60px;
+      left: -60px;
+      width: 180px;
+      height: 180px;
+      background: radial-gradient(circle, rgba(232,98,154,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .poem-icon {
+      font-size: 2rem;
+      margin-bottom: 18px;
+      opacity: 0.9;
+    }
+
+    .poem-title {
+      color: #e8629a;
+      font-size: clamp(14px, 3.8vw, 17px);
+      font-style: italic;
+      letter-spacing: 0.08em;
+      margin-bottom: 18px;
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
+
+    .poem-text {
+      color: rgba(255, 255, 255, 0.88);
+      font-size: clamp(15px, 4.2vw, 18px);
+      line-height: 1.85;
+      white-space: pre-line;
+    }
+
+    /* Navigation */
+    .nav-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #fff;
+      border-radius: 50px;
+      padding: 12px 28px;
+      font-size: clamp(13px, 3.8vw, 16px);
+      font-family: 'Georgia', serif;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      min-width: 105px;
+      touch-action: manipulation;
+    }
+
+    .nav-btn:active {
+      background: rgba(232, 98, 154, 0.3);
+      transform: scale(0.94);
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    .counter {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 14px;
+      min-width: 44px;
+      text-align: center;
+      letter-spacing: 0.05em;
+    }
+
+    /* Slide transition */
+    .poem-card.slide-out-left {
+      animation: slideOutLeft 0.3s ease forwards;
+    }
+
+    .poem-card.slide-out-right {
+      animation: slideOutRight 0.3s ease forwards;
+    }
+
+    .poem-card.slide-in-right {
+      animation: slideInRight 0.32s ease forwards;
+    }
+
+    .poem-card.slide-in-left {
+      animation: slideInLeft 0.32s ease forwards;
+    }
+
+    @keyframes slideOutLeft {
+      to { opacity: 0; transform: translateX(-60px); }
+    }
+    @keyframes slideOutRight {
+      to { opacity: 0; transform: translateX(60px); }
+    }
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(60px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-60px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Floating hearts (decoration) */
+    .heart {
+      position: absolute;
+      pointer-events: none;
+      user-select: none;
+      animation: floatUp linear forwards;
+      z-index: 1;
+      font-size: 18px;
+      opacity: 0;
+    }
+
+    @keyframes floatUp {
+      0%   { opacity: 0.8; transform: translateY(0) scale(1); }
+      100% { opacity: 0;   transform: translateY(-120px) scale(0.5); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════ GAME SCREEN ═══════════════════════════════ -->
+  <div id="game-screen">
+    <canvas id="stars-canvas"></canvas>
+    <div id="strawberry">🍓</div>
+    <button id="open-btn">Abra os seus poemas 💌</button>
+    <span id="touch-hint">toque no morango</span>
+  </div>
+
+  <!-- ═══════════════════════════════ CAROUSEL SCREEN ══════════════════════════ -->
+  <div id="carousel-screen">
+    <canvas id="stars-canvas-2"></canvas>
+    <div class="carousel-wrapper">
+      <div class="poem-card" id="poem-card">
+        <div class="poem-icon" id="poem-icon">🍓</div>
+        <div class="poem-title" id="poem-title">Poema 1</div>
+        <div class="poem-text" id="poem-text">Poema 1</div>
+      </div>
+      <div class="nav-row">
+        <button class="nav-btn" id="prev-btn">← Anterior</button>
+        <span class="counter" id="counter">1 / 5</span>
+        <button class="nav-btn" id="next-btn">Próximo →</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ═══════════════════════════ POEMS DATA ═══════════════════════════
+       Edit the title, icon, and text of each poem below.
+       Use \n for line breaks inside the text.
+    ═══════════════════════════════════════════════════════════════════ */
+    const poems = [
+      {
+        icon: '🍓',
+        title: 'Poema 1',
+        text: 'Poema 1\n\n(substitua este texto\npelo seu poema)'
+      },
+      {
+        icon: '🌙',
+        title: 'Poema 2',
+        text: 'Poema 2\n\n(substitua este texto\npelo seu poema)'
+      },
+      {
+        icon: '✨',
+        title: 'Poema 3',
+        text: 'Poema 3\n\n(substitua este texto\npelo seu poema)'
+      },
+      {
+        icon: '🌸',
+        title: 'Poema 4',
+        text: 'Poema 4\n\n(substitua este texto\npelo seu poema)'
+      },
+      {
+        icon: '💌',
+        title: 'Poema 5',
+        text: 'Poema 5\n\n(substitua este texto\npelo seu poema)'
+      }
+    ];
+
+    /* ═══════════════════════════ STARS ═══════════════════════════════ */
+    function initStars(canvas) {
+      const ctx = canvas.getContext('2d');
+      let stars = [];
+
+      function resize() {
+        canvas.width  = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        buildStars();
+      }
+
+      function buildStars() {
+        const count = Math.floor((canvas.width * canvas.height) / 3800);
+        stars = Array.from({ length: count }, () => ({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          r: Math.random() * 1.5 + 0.3,
+          a: Math.random(),
+          speed: Math.random() * 0.004 + 0.001,
+          phase: Math.random() * Math.PI * 2
+        }));
+      }
+
+      let raf;
+      function draw(t) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        stars.forEach(s => {
+          const alpha = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * s.speed * 60 + s.phase));
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255,255,255,${alpha * s.a})`;
+          ctx.fill();
+        });
+        raf = requestAnimationFrame(draw);
+      }
+
+      window.addEventListener('resize', resize);
+      resize();
+      raf = requestAnimationFrame(draw);
+      return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize); };
+    }
+
+    initStars(document.getElementById('stars-canvas'));
+    initStars(document.getElementById('stars-canvas-2'));
+
+    /* ═══════════════════════════ MINI-GAME ══════════════════════════ */
+    const strawberry = document.getElementById('strawberry');
+    const openBtn    = document.getElementById('open-btn');
+    const touchHint  = document.getElementById('touch-hint');
+    const gameScreen = document.getElementById('game-screen');
+
+    const MAX_TOUCHES = 5;
+    let touchCount = 0;
+    let isMoving = false;
+
+    function getStrawberrySize() {
+      return parseFloat(getComputedStyle(strawberry).fontSize) * 1.2;
+    }
+
+    function moveStrawberry() {
+      const margin = getStrawberrySize();
+      const maxX = window.innerWidth  - margin * 2;
+      const maxY = window.innerHeight - margin * 2;
+      const x = margin + Math.random() * maxX;
+      const y = margin + Math.random() * maxY;
+      strawberry.style.left = x + 'px';
+      strawberry.style.top  = y + 'px';
+      strawberry.style.transform = 'translate(-50%, -50%)';
+    }
+
+    function spawnHeart(x, y) {
+      const el = document.createElement('span');
+      el.className = 'heart';
+      el.textContent = ['💕','💗','💓','✨'][Math.floor(Math.random()*4)];
+      el.style.left = (x - 10) + 'px';
+      el.style.top  = (y - 10) + 'px';
+      el.style.animationDuration = (0.8 + Math.random() * 0.5) + 's';
+      gameScreen.appendChild(el);
+      el.addEventListener('animationend', () => el.remove());
+    }
+
+    function onStrawberryTouch(e) {
+      e.preventDefault();
+      if (isMoving) return;
+      isMoving = true;
+
+      const touch = e.touches ? e.touches[0] : e;
+      spawnHeart(touch.clientX, touch.clientY);
+
+      touchCount++;
+      if (touchCount < MAX_TOUCHES) {
+        touchHint.textContent = `mais ${MAX_TOUCHES - touchCount}x…`;
+        moveStrawberry();
+        setTimeout(() => { isMoving = false; }, 120);
+      } else {
+        // Final touch — hide strawberry, show button
+        strawberry.style.transition = 'opacity 0.3s, transform 0.3s';
+        strawberry.style.opacity = '0';
+        strawberry.style.transform = 'translate(-50%, -50%) scale(0)';
+        touchHint.style.opacity = '0';
+        setTimeout(() => {
+          strawberry.style.display = 'none';
+          openBtn.classList.add('visible');
+          isMoving = false;
+        }, 350);
+      }
+    }
+
+    strawberry.addEventListener('touchstart', onStrawberryTouch, { passive: false });
+    strawberry.addEventListener('mousedown',  onStrawberryTouch);
+
+    // Centre strawberry on load
+    window.addEventListener('load', moveStrawberry);
+    moveStrawberry();
+
+    /* ═══════════════════════════ TRANSITION ══════════════════════════ */
+    const carouselScreen = document.getElementById('carousel-screen');
+
+    openBtn.addEventListener('click', () => {
+      gameScreen.classList.add('hidden');
+      carouselScreen.classList.add('visible');
+      renderPoem(0, null);
+    });
+
+    /* ═══════════════════════════ CAROUSEL ═══════════════════════════ */
+    const poemCard  = document.getElementById('poem-card');
+    const poemIcon  = document.getElementById('poem-icon');
+    const poemTitle = document.getElementById('poem-title');
+    const poemText  = document.getElementById('poem-text');
+    const counter   = document.getElementById('counter');
+    const prevBtn   = document.getElementById('prev-btn');
+    const nextBtn   = document.getElementById('next-btn');
+
+    let current = 0;
+    let animating = false;
+
+    function renderPoem(index, direction) {
+      const poem = poems[index];
+
+      if (direction === null) {
+        // First render — no animation
+        poemIcon.textContent  = poem.icon;
+        poemTitle.textContent = poem.title;
+        poemText.textContent  = poem.text;
+        counter.textContent   = `${index + 1} / ${poems.length}`;
+        updateNavBtns(index);
+        return;
+      }
+
+      if (animating) return;
+      animating = true;
+
+      const outClass = direction === 'next' ? 'slide-out-left' : 'slide-out-right';
+      const inClass  = direction === 'next' ? 'slide-in-right' : 'slide-in-left';
+
+      poemCard.classList.add(outClass);
+
+      poemCard.addEventListener('animationend', function handler() {
+        poemCard.classList.remove(outClass);
+        poemCard.removeEventListener('animationend', handler);
+
+        poemIcon.textContent  = poem.icon;
+        poemTitle.textContent = poem.title;
+        poemText.textContent  = poem.text;
+        counter.textContent   = `${index + 1} / ${poems.length}`;
+        updateNavBtns(index);
+
+        poemCard.classList.add(inClass);
+        poemCard.addEventListener('animationend', function h2() {
+          poemCard.classList.remove(inClass);
+          poemCard.removeEventListener('animationend', h2);
+          animating = false;
+        });
+      });
+    }
+
+    function updateNavBtns(index) {
+      prevBtn.disabled = index === 0;
+      nextBtn.disabled = index === poems.length - 1;
+    }
+
+    prevBtn.addEventListener('click', () => {
+      if (current > 0) {
+        current--;
+        renderPoem(current, 'prev');
+      }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      if (current < poems.length - 1) {
+        current++;
+        renderPoem(current, 'next');
+      }
+    });
+
+    /* Touch/swipe on the card */
+    let swipeStartX = 0;
+    poemCard.addEventListener('touchstart', e => {
+      swipeStartX = e.touches[0].clientX;
+    }, { passive: true });
+
+    poemCard.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - swipeStartX;
+      if (Math.abs(dx) < 40) return;
+      if (dx < 0 && current < poems.length - 1) {
+        current++;
+        renderPoem(current, 'next');
+      } else if (dx > 0 && current > 0) {
+        current--;
+        renderPoem(current, 'prev');
+      }
+    }, { passive: true });
+  </script>
+</body>
+</html>
