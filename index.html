@@ -47,8 +47,8 @@
     }
 
     @keyframes appleBob {
-      0%, 100% { translate: 0 0;     }
-      50%       { translate: 0 -14px; }
+      0%, 100% { margin-top: 0;     }
+      50%       { margin-top: -14px; }
     }
 
     #strawberry {
@@ -56,7 +56,6 @@
       font-size: clamp(56px, 18vw, 96px);
       cursor: pointer;
       user-select: none;
-      transition: transform 0.08s ease;
       filter: drop-shadow(0 0 12px rgba(255, 80, 100, 0.55));
       line-height: 1;
       touch-action: none;
@@ -190,12 +189,17 @@
       gap: 28px;
     }
 
+    @keyframes cardBreath {
+      0%, 100% { box-shadow: 0 8px 40px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.04) inset, 0 0 18px var(--glow); }
+      50%       { box-shadow: 0 8px 40px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.04) inset, 0 0 42px var(--glow); }
+    }
+
     .poem-card {
       --accent:    #f472b6;
       --glow:      rgba(244,114,182,0.18);
       --border:    rgba(244,114,182,0.28);
       --card-bg:   rgba(255,255,255,0.05);
-      background: var(--card-bg);
+      background: rgba(18, 14, 32, 0.88); /* fallback sólido se backdrop-filter não suportado */
       border: 1px solid var(--border);
       border-radius: 20px;
       width: 100%;
@@ -206,13 +210,18 @@
       justify-content: center;
       padding: 32px 28px;
       text-align: center;
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35),
-                  0 0 0 1px rgba(255,255,255,0.04) inset;
       position: relative;
       overflow: hidden;
-      transition: border-color 0.5s ease, box-shadow 0.5s ease;
+      animation: cardBreath 3.5s ease-in-out infinite;
+      transition: border-color 0.5s ease;
+    }
+
+    @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+      .poem-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+      }
     }
 
     .poem-card::before {
@@ -261,7 +270,8 @@
       opacity: var(--op);
       animation: lilyDrift ease-in-out infinite;
       transform-origin: center;
-      translate: -50% -50%; /* centraliza pelo ponto de ancoragem */
+      margin-left: calc(var(--size) / -2);
+      margin-top:  calc(var(--size) / -2);
     }
 
     @keyframes lilyDrift {
@@ -448,8 +458,8 @@
       pointer-events: none;
       user-select: none;
       font-size: var(--ps);
+      line-height: 1;
       opacity: var(--po);
-      translate: -50% -50%;
       animation: potatoDrift ease-in-out infinite;
       z-index: 1;
     }
@@ -650,7 +660,9 @@
       }
 
       let raf;
+      let active = true;
       function draw(t) {
+        if (!active) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         stars.forEach(s => {
           const alpha = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * s.speed * 60 + s.phase));
@@ -665,9 +677,10 @@
       window.addEventListener('resize', resize);
       resize();
       raf = requestAnimationFrame(draw);
+      return { stop() { active = false; cancelAnimationFrame(raf); } };
     }
 
-    initStars(document.getElementById('stars-canvas'));
+    const gameStars = initStars(document.getElementById('stars-canvas'));
     initStars(document.getElementById('stars-canvas-2'));
 
     /* ════════════════════════════════════════════════════════════════
@@ -751,6 +764,7 @@
     openBtn.addEventListener('click', () => {
       startMusic();
       gameScreen.classList.add('hidden');
+      gameStars.stop();
       carouselScreen.classList.add('visible');
       renderPoem(0, null);
     });
