@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>💌 Sophia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after {
       box-sizing: border-box;
@@ -16,7 +19,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      font-family: 'Georgia', serif;
+      font-family: 'Playfair Display', Georgia, serif;
     }
 
     /* ─── GAME SCREEN ─── */
@@ -43,6 +46,11 @@
       height: 100%;
     }
 
+    @keyframes appleBob {
+      0%, 100% { translate: 0 0;     }
+      50%       { translate: 0 -14px; }
+    }
+
     #strawberry {
       position: absolute;
       font-size: clamp(56px, 18vw, 96px);
@@ -53,6 +61,7 @@
       line-height: 1;
       touch-action: none;
       z-index: 2;
+      animation: appleBob 2.6s ease-in-out infinite;
     }
 
     #strawberry:active {
@@ -152,6 +161,14 @@
     #carousel-screen.visible {
       opacity: 1;
       pointer-events: all;
+    }
+
+    #bg-tint {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      transition: background-color 0.9s ease;
     }
 
     #stars-canvas-2 {
@@ -438,6 +455,7 @@
 
   <!-- ══════════════════════ CAROUSEL SCREEN ══════════════════════ -->
   <div id="carousel-screen">
+    <div id="bg-tint"></div>
     <canvas id="stars-canvas-2"></canvas>
     <div id="lily-container"></div>
     <div class="carousel-wrapper">
@@ -474,10 +492,11 @@
        theme: 0=rosa  1=preto  2=azul  3=roxo
     ════════════════════════════════════════════════════════════════ */
     const THEMES = [
-      { accent: '#f472b6', glow: 'rgba(244,114,182,0.18)', border: 'rgba(244,114,182,0.28)', cardBg: 'rgba(255,255,255,0.05)' }, // rosa
-      { accent: '#e2e8f0', glow: 'rgba(226,232,240,0.10)', border: 'rgba(226,232,240,0.20)', cardBg: 'rgba(0,0,0,0.35)'       }, // preto
-      { accent: '#60a5fa', glow: 'rgba(96,165,250,0.18)',  border: 'rgba(96,165,250,0.28)',  cardBg: 'rgba(255,255,255,0.05)' }, // azul
-      { accent: '#a78bfa', glow: 'rgba(167,139,250,0.18)', border: 'rgba(167,139,250,0.28)', cardBg: 'rgba(255,255,255,0.05)' }, // roxo
+      { accent: '#f472b6', glow: 'rgba(244,114,182,0.18)', border: 'rgba(244,114,182,0.28)', cardBg: 'rgba(255,255,255,0.05)', bgTint: 'rgba(244,114,182,0.08)'  }, // 0 rosa
+      { accent: '#e2e8f0', glow: 'rgba(226,232,240,0.10)', border: 'rgba(226,232,240,0.20)', cardBg: 'rgba(0,0,0,0.35)',       bgTint: 'rgba(0,0,0,0.18)'        }, // 1 preto
+      { accent: '#60a5fa', glow: 'rgba(96,165,250,0.18)',  border: 'rgba(96,165,250,0.28)',  cardBg: 'rgba(255,255,255,0.05)', bgTint: 'rgba(96,165,250,0.08)'   }, // 2 azul
+      { accent: '#a78bfa', glow: 'rgba(167,139,250,0.18)', border: 'rgba(167,139,250,0.28)', cardBg: 'rgba(255,255,255,0.05)', bgTint: 'rgba(167,139,250,0.08)'  }, // 3 roxo
+      { accent: '#22d3ee', glow: 'rgba(34,211,238,0.18)',  border: 'rgba(34,211,238,0.28)',  cardBg: 'rgba(255,255,255,0.05)', bgTint: 'rgba(34,211,238,0.08)'   }, // 4 ciano
     ];
 
     /* ════════════════════════════════════════════════════════════════
@@ -498,7 +517,7 @@
         icon:  '🌅',
         title: 'Desde Aquele Domingo',
         text:  'Segundas me quebraram,\nTerças me deixaram sem esperança.\nNa quarta eu fui atrás de algo bom,\ne quinta começou a melhorar.\nSexta eu já tava bem, só de saber que ia te ver,\nSábado eu queimei como uma fogueira por você.\nLembra de quando a gente se conheceu naquele domingo?\nFoi quando os meus dias passaram a fazer sentido.',
-        theme: 2  // azul
+        theme: 1  // preto
       },
       {
         icon:  '🌸',
@@ -510,13 +529,13 @@
         icon:  '🌙',
         title: 'A Melhor Parte do Dia',
         text:  'Temos longas conversas à noite e isso é incrível,\ntorna meu dia menos corrido.\nDepois de chegar do trabalho, sabe o que eu quero?\nFicar boba olhando pra tela,\ne cada mensagem sua eu espero.',
-        theme: 1  // preto
+        theme: 2  // azul
       },
       {
         icon:  '❤️',
         title: 'Mais que um Poema',
         text:  'Oi! Sei que você esperava um poema aqui, mas não é isso.\n\nQueria deixar essa parte pra te dizer que eu te amo muito e que você pode contar comigo para todos os momentos.\nRuins, bons, tristes e felizes.\nNão importa.\nSempre vou estar com você.\n\nDa sua querida princesa,\nMelissa ❤️',
-        theme: 0  // rosa
+        theme: 4  // ciano
       },
       /* ── Para adicionar mais poemas, copie o bloco abaixo: ──────
       {
@@ -732,12 +751,15 @@
     let animating  = false;
     let generation = 0; // incremented on each navigation to invalidate stale listeners
 
+    const bgTintEl = document.getElementById('bg-tint');
+
     function applyTheme(poem) {
       const t = THEMES[poem.theme ?? 0];
       poemCard.style.setProperty('--accent',  t.accent);
       poemCard.style.setProperty('--glow',    t.glow);
       poemCard.style.setProperty('--border',  t.border);
       poemCard.style.setProperty('--card-bg', t.cardBg);
+      bgTintEl.style.backgroundColor = t.bgTint;
     }
 
     function renderPoem(index, direction) {
