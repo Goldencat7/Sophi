@@ -396,6 +396,30 @@
       0%   { transform: translateY(0)    rotate(0deg);   opacity: 1; }
       100% { transform: translateY(105vh) rotate(540deg); opacity: 0; }
     }
+
+    @keyframes hintPulse {
+      0%, 100% { opacity: 0.30; }
+      50%       { opacity: 0.65; }
+    }
+
+    #touch-hint {
+      animation: hintPulse 2.2s ease-in-out infinite;
+    }
+
+    .poem-text::-webkit-scrollbar {
+      width: 3px;
+    }
+
+    .poem-text::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .poem-text::-webkit-scrollbar-thumb {
+      background: var(--accent, rgba(244,114,182,0.45));
+      border-radius: 99px;
+      opacity: 0.5;
+    }
+  </style>
 </head>
 <body>
 
@@ -665,6 +689,7 @@
         strawberry.style.transition = 'opacity 0.3s, transform 0.3s';
         strawberry.style.opacity    = '0';
         strawberry.style.transform  = 'translate(-50%, -50%) scale(0)';
+        touchHint.style.animation   = 'none';
         touchHint.style.opacity     = '0';
         setTimeout(() => {
           strawberry.style.display = 'none';
