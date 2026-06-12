@@ -258,6 +258,10 @@
       font-size: clamp(15px, 4.2vw, 18px);
       line-height: 1.85;
       white-space: pre-line;
+      overflow-y: auto;
+      max-height: clamp(160px, 36vh, 300px);
+      width: 100%;
+      padding-right: 2px;
     }
 
     .nav-row {
@@ -423,7 +427,10 @@
         <div class="final-big-icon">💌</div>
         <div class="final-name">Sophia</div>
 
-        <img src="foto.jpg" alt="nós dois" style="width:clamp(110px,32vw,160px);height:clamp(110px,32vw,160px);border-radius:50%;object-fit:cover;object-position:center top;border:2px solid rgba(244,114,182,0.6);box-shadow:0 0 24px rgba(244,114,182,0.35);" />
+        <img src="foto.jpg" alt="nós dois"
+          style="width:clamp(110px,32vw,160px);height:clamp(110px,32vw,160px);border-radius:50%;object-fit:cover;object-position:center top;border:2px solid rgba(244,114,182,0.6);box-shadow:0 0 24px rgba(244,114,182,0.35);"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+        <div id="photo-placeholder" style="display:none">📸</div>
 
         <div class="final-msg">Feliz Dia dos Namorados 💕</div>
       </div>
@@ -666,8 +673,8 @@
       }
     }
 
-    strawberry.addEventListener('touchstart', onStrawberryTouch, { passive: false });
-    strawberry.addEventListener('mousedown',  onStrawberryTouch);
+    // Usa pointer events para evitar disparo duplo em tablets híbridos
+    strawberry.addEventListener('pointerdown', onStrawberryTouch);
 
     window.addEventListener('load', moveStrawberry);
     moveStrawberry();
@@ -856,18 +863,27 @@
       if (current < poems.length - 1  && !animating)  { current++; renderPoem(current, 'next'); }
     });
 
+    // Swipe nos poemas
     let swipeStartX = 0;
-    poemCard.addEventListener('touchstart', e => { swipeStartX = e.touches[0].clientX; }, { passive: true });
-    poemCard.addEventListener('touchend', e => {
-      const dx = e.changedTouches[0].clientX - swipeStartX;
-      if (Math.abs(dx) < 40) return;
+    function onSwipeStart(e) { swipeStartX = (e.touches || [e])[0].clientX; }
+    function onSwipeEnd(e) {
+      const dx = (e.changedTouches || [e])[0].clientX - swipeStartX;
+      if (Math.abs(dx) < 50) return;
+      if (showingFinal) {
+        if (dx > 0) hideFinalCard();
+        return;
+      }
       if (dx < 0 && !animating) {
         if (current < poems.length - 1) { current++; renderPoem(current, 'next'); }
         else { showFinalCard(); }
       } else if (dx > 0 && current > 0 && !animating) {
         current--; renderPoem(current, 'prev');
       }
-    }, { passive: true });
+    }
+    poemCard.addEventListener('touchstart',  onSwipeStart, { passive: true });
+    poemCard.addEventListener('touchend',    onSwipeEnd,   { passive: true });
+    finalCard.addEventListener('touchstart', onSwipeStart, { passive: true });
+    finalCard.addEventListener('touchend',   onSwipeEnd,   { passive: true });
 
     /* ════════════════════════════════════════════════════════════════
        LÍRIOS NO FUNDO
