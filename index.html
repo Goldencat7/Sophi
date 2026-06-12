@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>💌 Surpresa</title>
+  <title>💌 Sophia</title>
   <style>
     *, *::before, *::after {
       box-sizing: border-box;
@@ -324,7 +324,73 @@
       0%   { opacity: 0.8; transform: translateY(0) scale(1); }
       100% { opacity: 0;   transform: translateY(-120px) scale(0.5); }
     }
-  </style>
+
+    /* ─── FINAL CARD ─── */
+    #final-card {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      --accent:  #f472b6;
+      --glow:    rgba(244,114,182,0.22);
+      --border:  rgba(244,114,182,0.35);
+      --card-bg: rgba(255,255,255,0.05);
+    }
+
+    .final-big-icon {
+      font-size: 3rem;
+      animation: finalPulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes finalPulse {
+      0%, 100% { transform: scale(1); }
+      50%       { transform: scale(1.15); }
+    }
+
+    .final-name {
+      font-size: clamp(26px, 8vw, 40px);
+      color: #f472b6;
+      font-style: italic;
+      letter-spacing: 0.12em;
+      text-shadow: 0 0 24px rgba(244,114,182,0.5);
+    }
+
+    /* Placeholder da foto — substitua pelo <img> quando tiver a foto */
+    #photo-placeholder {
+      width: clamp(110px, 32vw, 160px);
+      height: clamp(110px, 32vw, 160px);
+      border-radius: 50%;
+      border: 2px dashed rgba(244,114,182,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      color: rgba(244,114,182,0.4);
+      background: rgba(244,114,182,0.05);
+    }
+
+    .final-msg {
+      color: rgba(255,255,255,0.75);
+      font-size: clamp(14px, 4vw, 17px);
+      font-style: italic;
+      letter-spacing: 0.06em;
+      text-align: center;
+    }
+
+    /* Confetti */
+    .confetti-piece {
+      position: fixed;
+      top: -24px;
+      pointer-events: none;
+      z-index: 200;
+      animation: confettiFall linear forwards;
+    }
+
+    @keyframes confettiFall {
+      0%   { transform: translateY(0)    rotate(0deg);   opacity: 1; }
+      100% { transform: translateY(105vh) rotate(540deg); opacity: 0; }
+    }
 </head>
 <body>
 
@@ -351,6 +417,21 @@
         <div class="poem-title" id="poem-title">Poema 1</div>
         <div class="poem-text"  id="poem-text">Poema 1</div>
       </div>
+
+      <!-- Card final — aparece após o último poema -->
+      <div class="poem-card" id="final-card">
+        <div class="final-big-icon">💌</div>
+        <div class="final-name">Sophia</div>
+
+        <!--
+          FOTO: quando tiver a imagem, substitua o div abaixo por:
+          <img src="URL_DA_FOTO" style="width:clamp(110px,32vw,160px);height:clamp(110px,32vw,160px);border-radius:50%;object-fit:cover;border:2px solid rgba(244,114,182,0.6);" />
+        -->
+        <div id="photo-placeholder">📸</div>
+
+        <div class="final-msg">Feliz Dia dos Namorados 💕</div>
+      </div>
+
       <div class="nav-row">
         <button class="nav-btn" id="prev-btn">← Anterior</button>
         <span class="counter"   id="counter">1 / 5</span>
@@ -683,15 +764,100 @@
 
     function updateNavBtns(index) {
       prevBtn.disabled = index === 0;
-      nextBtn.disabled = index === poems.length - 1;
+      nextBtn.disabled = false;
+      nextBtn.textContent = index === poems.length - 1 ? 'Finalizar ✨' : 'Próximo →';
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       CARD FINAL
+    ════════════════════════════════════════════════════════════════ */
+    const finalCard = document.getElementById('final-card');
+    let showingFinal = false;
+
+    function showFinalCard() {
+      if (animating || showingFinal) return;
+      animating = true;
+      showingFinal = true;
+      const myGen = ++generation;
+
+      poemCard.classList.add('slide-out-left');
+      poemCard.addEventListener('animationend', function h(e) {
+        if (e.target !== poemCard) return;
+        if (generation !== myGen) { poemCard.removeEventListener('animationend', h); return; }
+        poemCard.classList.remove('slide-out-left');
+        poemCard.removeEventListener('animationend', h);
+        poemCard.style.display = 'none';
+
+        finalCard.style.display = 'flex';
+        finalCard.classList.add('slide-in-right');
+        finalCard.addEventListener('animationend', function h2(e) {
+          if (e.target !== finalCard) return;
+          finalCard.classList.remove('slide-in-right');
+          finalCard.removeEventListener('animationend', h2);
+          animating = false;
+          launchConfetti();
+        });
+
+        nextBtn.style.visibility = 'hidden';
+        prevBtn.disabled = false;
+        counter.textContent = '💌';
+      });
+    }
+
+    function hideFinalCard() {
+      if (animating) return;
+      animating = true;
+      showingFinal = false;
+      const myGen = ++generation;
+
+      finalCard.classList.add('slide-out-right');
+      finalCard.addEventListener('animationend', function h(e) {
+        if (e.target !== finalCard) return;
+        if (generation !== myGen) { finalCard.removeEventListener('animationend', h); return; }
+        finalCard.classList.remove('slide-out-right');
+        finalCard.removeEventListener('animationend', h);
+        finalCard.style.display = 'none';
+
+        poemCard.style.display = 'flex';
+        poemCard.classList.add('slide-in-left');
+        poemCard.addEventListener('animationend', function h2(e) {
+          if (e.target !== poemCard) return;
+          poemCard.classList.remove('slide-in-left');
+          poemCard.removeEventListener('animationend', h2);
+          animating = false;
+        });
+
+        nextBtn.style.visibility = 'visible';
+        counter.textContent = `${current + 1} / ${poems.length}`;
+        updateNavBtns(current);
+      });
+    }
+
+    function launchConfetti() {
+      const pieces = ['💕','💗','💜','💙','✨','🌸','💌'];
+      for (let i = 0; i < 45; i++) {
+        setTimeout(() => {
+          const el = document.createElement('span');
+          el.className = 'confetti-piece';
+          el.textContent = pieces[Math.floor(Math.random() * pieces.length)];
+          el.style.left     = Math.random() * 100 + 'vw';
+          el.style.fontSize = (13 + Math.random() * 14) + 'px';
+          el.style.animationDuration = (1.4 + Math.random() * 1.8) + 's';
+          el.style.animationDelay    = '0s';
+          document.body.appendChild(el);
+          el.addEventListener('animationend', () => el.remove());
+        }, i * 55);
+      }
     }
 
     prevBtn.addEventListener('click', () => {
+      if (showingFinal)                    { hideFinalCard(); return; }
       if (current > 0 && !animating) { current--; renderPoem(current, 'prev'); }
     });
 
     nextBtn.addEventListener('click', () => {
-      if (current < poems.length - 1 && !animating) { current++; renderPoem(current, 'next'); }
+      if (current === poems.length - 1 && !animating) { showFinalCard(); return; }
+      if (current < poems.length - 1  && !animating)  { current++; renderPoem(current, 'next'); }
     });
 
     let swipeStartX = 0;
@@ -699,8 +865,12 @@
     poemCard.addEventListener('touchend', e => {
       const dx = e.changedTouches[0].clientX - swipeStartX;
       if (Math.abs(dx) < 40) return;
-      if (dx < 0 && current < poems.length - 1 && !animating) { current++; renderPoem(current, 'next'); }
-      else if (dx > 0 && current > 0 && !animating)            { current--; renderPoem(current, 'prev'); }
+      if (dx < 0 && !animating) {
+        if (current < poems.length - 1) { current++; renderPoem(current, 'next'); }
+        else { showFinalCard(); }
+      } else if (dx > 0 && current > 0 && !animating) {
+        current--; renderPoem(current, 'prev');
+      }
     }, { passive: true });
 
     /* ════════════════════════════════════════════════════════════════
